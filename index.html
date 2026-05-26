@@ -1,0 +1,1346 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<title>清掃マニュアル</title>
+<!--
+╔══════════════════════════════════════════════════════════════╗
+║              清掃マニュアル — 編集ガイド                      ║
+╠══════════════════════════════════════════════════════════════╣
+║                                                              ║
+║  ■ 物件情報の変更方法                                        ║
+║    下の CONFIG オブジェクトを編集してください。               ║
+║    - property.name    : 物件名（例: @marugame）              ║
+║    - property.address : 住所（例: ファミール仁井田101号室）  ║
+║    - property.duration : 所要時間                             ║
+║    - property.keybox  : キーボックス番号                      ║
+║    - assistBnbUrl : AssistBnBのURL                            ║
+║                                                              ║
+║  ■ 項目の追加・編集方法                                      ║
+║    CHECKLIST_DATA 配列の各セクションの items を編集します。   ║
+║    例: { text: "新しい項目" }                                 ║
+║    バッジ付き: { text: "重要な項目", badge: "超重要！",       ║
+║                  badgeType: "critical" }                      ║
+║    badgeType: "critical"(赤), "warning"(黄)                  ║
+║                                                              ║
+║  ■ 写真の追加方法                                            ║
+║    1. 画像をBase64に変換:                                     ║
+║       - https://base64.guru/converter/encode/image           ║
+║         などのサイトで画像をBase64に変換                      ║
+║    2. CHECKLIST_DATA の該当セクションの photos 配列に追加:    ║
+║       photos: ["data:image/jpeg;base64,/9j/4AAQ..."]         ║
+║    ※ アプリ内の「＋」ボタンからも追加可能（端末に保存）     ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
+-->
+
+<script>
+// ============================================================
+// CONFIG: ここを編集すれば設定変更できます
+// ============================================================
+const CONFIG = {
+  property: {
+    name: "@marugame",
+    address: "ファミール仁井田101号室",
+    duration: "90分",
+    keybox: "0906"
+  },
+  assistBnbUrl: "https://assistbnb.lilfires.com/clean/cleaner/lineLogin/H5CTYAL?role=CLEANER&openExternalBrowser=1"
+};
+
+// ============================================================
+// CHECKLIST_DATA: チェックリストの全データ
+// ============================================================
+const CHECKLIST_DATA = [
+  {
+    id: "start",
+    label: "1. 先ずすること",
+    color: { bg: "#FAEEDA", text: "#854F0B", border: "#BA7517" },
+    photos: [],
+    items: [
+      { text: "全窓を開けて換気開始", badge: "作業中ずっと", badgeType: "warning" },
+      { text: "退去後の状況を写真に撮る" },
+      { text: "室内の異常・破損・忘れ物チェック" }
+    ],
+    subBoxes: [
+      {
+        title: "洗濯フロー",
+        icon: "🧺",
+        color: { bg: "#FFF8E7", border: "#BA7517" },
+        items: [
+          { tag: "1F", text: "タオル（白）洗濯開始 → 枕カバー・布団カバー・スポンジ類" },
+          { tag: "2F", text: "グレーのタオル・マット洗濯開始 → 敷きシーツ" }
+        ]
+      }
+    ]
+  },
+  {
+    id: "allrooms",
+    label: "2. 全室共通",
+    color: { bg: "#F1EFE8", text: "#444441", border: "#8A8A86" },
+    photos: [],
+    items: [
+      { text: "全室の床掃除機＆水拭き" },
+      { text: "髪の毛・ほこりの確認", badge: "超重要！", badgeType: "critical" }
+    ]
+  },
+  {
+    id: "exterior",
+    label: "3. 外回り",
+    color: { bg: "#EAF3DE", text: "#3B6D11", border: "#5A9C2A" },
+    photos: [],
+    items: [
+      { text: "キーボックスの確認・初期化" },
+      { text: "玄関周り・ベランダの掃き掃除" },
+      { text: "扉・自転車を拭く" },
+      { text: "ゴミ確認（ベランダの茶箱内も）" }
+    ]
+  },
+  {
+    id: "entrance",
+    label: "4. 玄関",
+    color: { bg: "#F1EFE8", text: "#444441", border: "#8A8A86" },
+    photos: [],
+    items: [
+      { text: "たたきの砂・ゴミ除去" },
+      { text: "ドアノブを拭く" },
+      { text: "スリッパを拭く" }
+    ]
+  },
+  {
+    id: "living",
+    label: "5. リビング",
+    color: { bg: "#E6F1FB", text: "#0C447C", border: "#3A7FC1" },
+    photos: [],
+    items: [
+      { text: "テーブル・棚を拭く" },
+      { text: "ソファ・クッションを整える" },
+      { text: "リモコン・情報雑誌を拭いて定位置へ" }
+    ]
+  },
+  {
+    id: "kitchen",
+    label: "6. キッチン",
+    color: { bg: "#FAECE7", text: "#712B13", border: "#B85A3A" },
+    photos: [],
+    items: [
+      { text: "シンク・排水口の洗浄" },
+      { text: "コンロ周りの油汚れ拭き取り" },
+      { text: "冷蔵庫・冷凍庫内チェック＆拭き掃除（氷・アイスの補充）" },
+      { text: "電子レンジ・ケトル・コーヒーメーカー確認" },
+      { text: "食器・キッチン用品の整頓（シンク下も）" },
+      { text: "調味料の賞味期限確認" },
+      { text: "洗剤の補充" },
+      { text: "ゴミ袋交換（燃える・燃えないで分別）" }
+    ]
+  },
+  {
+    id: "bathroom",
+    label: "7. 浴室・洗面",
+    color: { bg: "#EEEDFE", text: "#3C3489", border: "#6A61C7" },
+    photos: [],
+    items: [
+      { text: "髪の毛除去（排水口含む）" },
+      { text: "鏡の水垢拭き取り" },
+      { text: "蛇口・壁・床の水滴拭き上げ" },
+      { text: "洗面台の汚れ確認" },
+      { text: "アメニティ・タオル・洗剤の補充・整理" }
+    ]
+  },
+  {
+    id: "toilet",
+    label: "8. トイレ",
+    color: { bg: "#E1F5EE", text: "#0F6E56", border: "#2A9E82" },
+    photos: [],
+    items: [
+      { text: "便器・便座・便座裏の清掃" },
+      { text: "床・壁際の拭き掃除" },
+      { text: "手洗い周りの水はね拭き取り" },
+      { text: "トイレットペーパー補充" },
+      { text: "消臭剤の残量確認" }
+    ]
+  },
+  {
+    id: "bedroom",
+    label: "9. 寝室",
+    color: { bg: "#FBEAF0", text: "#72243E", border: "#B84A6A" },
+    photos: [],
+    items: [
+      { text: "シーツ・枕カバー・布団カバー交換" },
+      { text: "ベッドメイキング（シワなくキレイに）" },
+      { text: "クローゼット内の確認・備品/忘れ物チェック" }
+    ]
+  },
+  {
+    id: "finishing",
+    label: "10. 仕上げ",
+    color: { bg: "#FAEEDA", text: "#854F0B", border: "#BA7517" },
+    photos: [],
+    items: [
+      { text: "窓・照明・エアコン・家電の動作確認" },
+      { text: "備品の数を確認" },
+      { text: "消臭スプレー" }
+    ]
+  },
+  {
+    id: "done",
+    label: "11. 終わったら",
+    subtitle: "ゲスト有無で電気を切替・換気扇は常時ON",
+    color: { bg: "#FCEBEB", text: "#A32D2D", border: "#C85454" },
+    photos: [],
+    fixedNote: "🔄 トイレ・浴室の換気扇は常時ON",
+    guestToggle: true,
+    guestYes: {
+      title: "当日ゲストありの場合",
+      color: { bg: "#FFF0ED", border: "#E8A090", text: "#712B13" },
+      items: [
+        { text: "ソファ横ランプ・玄関電気のみ点灯、他は消灯" },
+        { text: "夏はリビングのエアコンON（25℃）" },
+        { text: "スリッパを人数分並べる" },
+        { text: "玄関の鍵をかける" },
+        { text: "車を移動" }
+      ]
+    },
+    guestNo: {
+      title: "当日ゲストなしの場合",
+      color: { bg: "#F0F0F0", border: "#BDBDBD", text: "#444444" },
+      items: [
+        { text: "全ての電気を消す" },
+        { text: "玄関の鍵をかける" }
+      ]
+    }
+  },
+  {
+    id: "prep",
+    label: "12. 準備室にて",
+    color: { bg: "#E1F5EE", text: "#0F6E56", border: "#2A9E82" },
+    photos: [],
+    items: [
+      { text: "乾いた洗濯物をたたむ（裏表コロコロで髪の毛除去）", badge: "超重要！", badgeType: "critical" },
+      { text: "洗濯物を干す" },
+      { text: "布団・枕カバー掛け" },
+      { text: "次回ゲストの準備" }
+    ]
+  },
+  {
+    id: "optional",
+    label: "時間がある時に",
+    isOptional: true,
+    color: { bg: "#FFFFFF", text: "#777777", border: "#CCCCCC" },
+    photos: [],
+    items: [
+      { text: "庭の草むしり" },
+      { text: "窓拭き" },
+      { text: "洗濯竿拭き" },
+      { text: "自転車タイヤの空気入れ" },
+      { text: "和室のブラインドを拭く" },
+      { text: "照明器具の傘を拭く" }
+    ]
+  }
+];
+</script>
+
+<style>
+/* ============================== Reset & Base ============================== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  font-family: -apple-system, "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
+  font-size: 16px;
+  line-height: 1.7;
+  color: #333;
+  background: #F5F4EE;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ============================== Layout ============================== */
+#app {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 12px 12px 24px;
+}
+
+/* ============================== Page Title ============================== */
+.page-title {
+  text-align: center;
+  font-size: 22px;
+  font-weight: 700;
+  color: #222;
+  padding: 18px 16px 12px;
+  letter-spacing: 0.5px;
+}
+
+/* ============================== Header ============================== */
+.header {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  border: 0.5px solid rgba(0,0,0,0.1);
+}
+.header-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 15px;
+  color: #333;
+  line-height: 1.6;
+}
+.header-label {
+  font-weight: 700;
+  white-space: nowrap;
+  color: #555;
+}
+.header-value {
+  font-weight: 700;
+  color: #222;
+}
+
+/* ============================== Progress ============================== */
+.progress-wrapper {
+  background: #fff;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  border: 0.5px solid rgba(0,0,0,0.1);
+}
+.progress-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #444;
+}
+.progress-percent {
+  font-size: 12px;
+  color: #888;
+}
+.progress-bar {
+  height: 8px;
+  background: #E8E7E2;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #F0A030, #E8883C);
+  border-radius: 4px;
+  transition: width 0.4s ease;
+  width: 0%;
+}
+.progress-fill.complete {
+  background: linear-gradient(90deg, #4CAF50, #2E7D32);
+}
+
+/* ============================== Safety Notice ============================== */
+.safety-notice {
+  background: #FAEEDA;
+  border-left: 3px solid #BA7517;
+  border-radius: 0 12px 12px 0;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+.safety-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #854F0B;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.safety-list {
+  list-style: none;
+  font-size: 13px;
+  color: #6B4A0A;
+}
+.safety-list li {
+  padding: 3px 0;
+  padding-left: 18px;
+  position: relative;
+}
+.safety-list li::before {
+  content: "\26A0";
+  position: absolute;
+  left: 0;
+  font-size: 11px;
+}
+
+/* ============================== Section Card ============================== */
+.section-card {
+  background: #fff;
+  border-radius: 12px;
+  border: 0.5px solid rgba(0,0,0,0.1);
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+.section-card.optional {
+  background: #fff;
+  border: 2px dashed #CCCCCC;
+}
+.section-header {
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-title {
+  font-size: 18px;
+  font-weight: 700;
+  flex: 1;
+}
+.section-subtitle {
+  font-size: 11px;
+  font-weight: 400;
+  opacity: 0.75;
+  display: block;
+  margin-top: 2px;
+}
+
+/* ============================== Photo Gallery ============================== */
+.photo-gallery {
+  display: flex;
+  gap: 10px;
+  padding: 8px 16px 14px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.photo-gallery::-webkit-scrollbar { display: none; }
+
+.photo-thumb {
+  width: 90px;
+  height: 90px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2.5px solid;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.photo-thumb:active { transform: scale(0.95); }
+
+.photo-add-large {
+  width: 90px;
+  height: 90px;
+  border-radius: 10px;
+  border: 2.5px dashed;
+  background: transparent;
+  font-size: 30px;
+  color: inherit;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+}
+.photo-add-large:hover, .photo-add-large:active { opacity: 0.8; }
+
+.photo-add-small {
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  border: 2px dashed;
+  background: transparent;
+  font-size: 22px;
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.5;
+  flex-shrink: 0;
+  transition: opacity 0.2s;
+}
+.photo-add-small:hover, .photo-add-small:active { opacity: 0.8; }
+
+/* ============================== Checklist Items ============================== */
+.checklist-items {
+  padding: 0;
+}
+.checklist-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 13px 16px;
+  gap: 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.checklist-item:active { background: #F9F8F4; }
+.checklist-item.checked { opacity: 0.5; }
+.checklist-item.checked .item-text { text-decoration: line-through; }
+
+.item-checkbox {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  accent-color: #4CAF50;
+  cursor: pointer;
+}
+
+.item-content {
+  flex: 1;
+  min-width: 0;
+}
+.item-text {
+  font-size: 15px;
+  color: #222;
+  transition: opacity 0.2s;
+}
+
+/* ============================== Badges ============================== */
+.badge {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-left: 6px;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.badge-critical {
+  background: #FCEBEB;
+  color: #A32D2D;
+}
+.badge-warning {
+  background: #FAEEDA;
+  color: #854F0B;
+}
+
+/* ============================== Sub Boxes ============================== */
+.sub-box {
+  margin: 4px 16px 12px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid;
+}
+.sub-box-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.sub-box-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 0;
+}
+.sub-box-tag {
+  font-size: 15px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.sub-box-text {
+  font-size: 15px;
+  flex: 1;
+}
+
+/* Sub-box checklist items */
+.sub-box .checklist-item {
+  padding: 8px 0;
+}
+
+/* ============================== Fixed Note ============================== */
+.fixed-note {
+  margin: 4px 16px;
+  padding: 10px 14px;
+  background: #FFF3E0;
+  border: 1px solid #FFB74D;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #E65100;
+  text-align: center;
+}
+
+/* ============================== Guest Toggle ============================== */
+.guest-toggle {
+  display: flex;
+  gap: 8px;
+  padding: 10px 16px;
+}
+.guest-toggle-btn {
+  flex: 1;
+  padding: 12px 8px;
+  border-radius: 10px;
+  border: 2px solid #ddd;
+  background: #f9f9f9;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #888;
+  -webkit-tap-highlight-color: transparent;
+}
+.guest-toggle-btn.active-yes {
+  border-color: #E8A090;
+  background: #FFF0ED;
+  color: #712B13;
+}
+.guest-toggle-btn.active-no {
+  border-color: #BDBDBD;
+  background: #F0F0F0;
+  color: #444;
+}
+
+.guest-box { margin: 0 16px 12px; padding: 12px; border-radius: 10px; border: 1px solid; }
+.guest-box-title { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+.guest-box .checklist-item { padding: 8px 0; }
+.guest-box-hidden { display: none; }
+
+/* ============================== Completion Box ============================== */
+.completion-box {
+  background: #E6F1FB;
+  border: 1px solid #85B7EB;
+  border-radius: 12px;
+  padding: 20px 16px;
+  margin-bottom: 12px;
+  text-align: center;
+}
+.completion-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: #0C447C;
+  margin-bottom: 14px;
+}
+.completion-btn {
+  display: inline-block;
+  padding: 12px 28px;
+  background: #0C447C;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.completion-btn:active { background: #093462; }
+
+/* ============================== Footer ============================== */
+.footer {
+  display: flex;
+  gap: 12px;
+  padding: 8px 0 16px;
+}
+.footer-btn {
+  flex: 1;
+  padding: 16px 12px;
+  border-radius: 12px;
+  border: 2px solid #0C447C;
+  background: #0C447C;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.footer-btn:active { background: #093462; }
+.footer-btn-reset {
+  background: #fff;
+  color: #A32D2D;
+  border-color: #D09090;
+}
+.footer-btn-reset:active { background: #FDF0F0; }
+
+/* ============================== Photo Modal ============================== */
+.photo-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.95);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.photo-modal.visible { opacity: 1; }
+.photo-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 32px;
+  cursor: pointer;
+  z-index: 1010;
+  -webkit-tap-highlight-color: transparent;
+}
+.photo-modal-counter {
+  position: absolute;
+  top: 18px;
+  left: 16px;
+  color: rgba(255,255,255,0.7);
+  font-size: 14px;
+  z-index: 1010;
+}
+.photo-modal-img-wrap {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  touch-action: none;
+}
+.photo-modal-img {
+  max-width: 95%;
+  max-height: 85vh;
+  object-fit: contain;
+  transition: transform 0.15s ease;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.photo-modal-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,0.6);
+  font-size: 36px;
+  cursor: pointer;
+  z-index: 1010;
+  -webkit-tap-highlight-color: transparent;
+}
+.photo-modal-nav:hover { color: #fff; }
+.photo-modal-prev { left: 4px; }
+.photo-modal-next { right: 4px; }
+
+/* ============================== Toast ============================== */
+.toast {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: rgba(0,0,0,0.8);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  z-index: 2000;
+  opacity: 0;
+  transition: all 0.3s;
+  white-space: nowrap;
+  max-width: 90vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ============================== Print Styles ============================== */
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm 10mm;
+  }
+  body { background: #fff; font-size: 11pt; line-height: 1.5; color: #000; }
+  #app { max-width: 100%; padding: 0; }
+
+  /* 非表示にする要素 */
+  .progress-wrapper, .footer, .photo-add-large, .photo-add-small,
+  .guest-toggle, .photo-modal, .toast, .completion-box { display: none !important; }
+
+  /* タイトル */
+  .page-title { font-size: 18pt; padding: 8px 0 6px; }
+
+  /* ヘッダー */
+  .header { padding: 8px 12px; margin-bottom: 8px; border: 1px solid #ccc; }
+  .header-row { font-size: 10pt; padding: 2px 0; }
+
+  /* セクションカード */
+  .section-card { break-inside: avoid; margin-bottom: 6px; border: 1px solid #ccc; box-shadow: none; }
+  .section-card.optional { border: 1.5px dashed #999; }
+  .section-header { padding: 6px 10px; }
+  .section-title { font-size: 12pt; }
+
+  /* チェックリスト項目 */
+  .checklist-item { padding: 3px 10px; gap: 6px; }
+  .item-checkbox { width: 13px; height: 13px; }
+  .item-text { font-size: 9pt; }
+  .badge { font-size: 8pt; padding: 1px 4px; }
+
+  /* サブボックス */
+  .sub-box { margin: 4px 10px 6px; padding: 8px; }
+  .sub-box-title { font-size: 10pt; }
+  .sub-box-tag { font-size: 9pt; padding: 2px 6px; }
+  .sub-box-text { font-size: 10pt; }
+
+  /* 写真ギャラリー */
+  .photo-gallery {
+    flex-wrap: wrap;
+    overflow: visible;
+    gap: 3px;
+    padding: 4px 10px 6px;
+  }
+  .photo-thumb { width: 42px; height: 42px; border-width: 1px; border-radius: 4px; }
+
+  /* 固定ノート */
+  .fixed-note { font-size: 10pt; margin: 4px 10px; padding: 6px 8px; }
+
+  /* ゲストボックス */
+  .guest-box { margin: 4px 10px 6px; padding: 8px; }
+  .guest-box-title { font-size: 10pt; }
+  .guest-box-hidden { display: block !important; opacity: 0.4; }
+  .guest-box .checklist-item { padding: 3px 0; }
+}
+
+/* ============================== Responsive ============================== */
+@media (min-width: 500px) {
+  #app { padding: 16px 20px 32px; }
+  .section-title { font-size: 16px; }
+  .item-text { font-size: 14px; }
+}
+</style>
+</head>
+
+<body>
+<div id="app"></div>
+<input type="file" id="photo-file-input" accept="image/*" style="display:none">
+
+<script>
+(function() {
+  'use strict';
+
+  // ============================== State ==============================
+  const STORAGE_KEY = 'cleaning-checklist-' + CONFIG.property.name;
+  const PHOTOS_KEY = 'cleaning-photos-' + CONFIG.property.name;
+  const GUEST_KEY = 'cleaning-guest-' + CONFIG.property.name;
+  let addPhotoTarget = null;
+  let modalState = { sectionId: null, index: 0, photos: [], scale: 1, startDist: 0, startX: 0, isDragging: false };
+
+  // ============================== Helpers ==============================
+  function getStoredPhotos() {
+    try { return JSON.parse(localStorage.getItem(PHOTOS_KEY)) || {}; } catch(e) { return {}; }
+  }
+
+  function saveStoredPhotos(data) {
+    localStorage.setItem(PHOTOS_KEY, JSON.stringify(data));
+  }
+
+  function getAllPhotos(sectionId) {
+    var section = CHECKLIST_DATA.find(function(s) { return s.id === sectionId; });
+    var base = section ? (section.photos || []) : [];
+    var stored = getStoredPhotos();
+    var extra = stored[sectionId] || [];
+    return base.concat(extra);
+  }
+
+  function getCheckedState() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch(e) { return {}; }
+  }
+
+  function getGuestMode() {
+    return localStorage.getItem(GUEST_KEY) || 'yes';
+  }
+
+  function showToast(msg) {
+    var existing = document.querySelector('.toast');
+    if (existing) existing.remove();
+    var t = document.createElement('div');
+    t.className = 'toast';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    requestAnimationFrame(function() { t.classList.add('show'); });
+    setTimeout(function() { t.classList.remove('show'); setTimeout(function() { t.remove(); }, 300); }, 2500);
+  }
+
+  // ============================== Render ==============================
+  function renderApp() {
+    var h = '';
+    h += renderHeader();
+    h += renderProgress();
+    CHECKLIST_DATA.forEach(function(sec) { h += renderSection(sec); });
+    h += renderCompletion();
+    h += renderFooter();
+    document.getElementById('app').innerHTML = h;
+    restoreState();
+    updateProgress();
+  }
+
+  function renderHeader() {
+    var addr = CONFIG.property.address ? '（' + esc(CONFIG.property.address) + '）' : '';
+    return '<div class="page-title">' + esc(CONFIG.property.name) + ' 清掃マニュアル</div>' +
+    '<div class="header">' +
+      '<div class="header-row"><span class="header-label">■ 清掃対象物件：</span><span class="header-value">' + esc(CONFIG.property.name) + '<br>' + esc(CONFIG.property.address || '') + '</span></div>' +
+      '<div class="header-row"><span class="header-label">■ 清掃時間の目安：</span><span class="header-value">' + esc(CONFIG.property.duration) + '</span></div>' +
+      '<div class="header-row"><span class="header-label">■ 入室方法：</span><span class="header-value">キーボックス番号 ' + esc(CONFIG.property.keybox) + '</span></div>' +
+    '</div>';
+  }
+
+  function renderProgress() {
+    return '<div class="progress-wrapper">' +
+      '<div class="progress-label"><span id="progress-count">0/0 完了</span><span class="progress-percent" id="progress-pct">0%</span></div>' +
+      '<div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>' +
+    '</div>';
+  }
+
+  function renderSafety() {
+    return '<div class="safety-notice">' +
+      '<div class="safety-title">⚠️ 安全のお願い</div>' +
+      '<ul class="safety-list">' +
+        '<li>作業中ずっと換気してください</li>' +
+        '<li>洗剤を混ぜない（塩素系と酸性）</li>' +
+        '<li>手袋・マスク着用推奨</li>' +
+        '<li>重い物は無理せず2人で</li>' +
+      '</ul>' +
+    '</div>';
+  }
+
+  function renderSection(sec) {
+    var photos = getAllPhotos(sec.id);
+    var hasPhotos = photos.length > 0;
+    var isOpt = sec.isOptional;
+    var cls = 'section-card' + (isOpt ? ' optional' : '');
+
+    var h = '<div class="' + cls + '" data-section="' + sec.id + '">';
+
+    // Header
+    h += '<div class="section-header" style="background:' + sec.color.bg + ';color:' + sec.color.text + '">';
+    h += '<span class="section-title">' + esc(sec.label);
+    if (sec.subtitle) h += '<span class="section-subtitle">' + esc(sec.subtitle) + '</span>';
+    h += '</span>';
+    if (!hasPhotos) {
+      h += '<button class="photo-add-small" data-add-photo="' + sec.id + '" style="border-color:' + sec.color.border + ';color:' + sec.color.text + '">＋</button>';
+    }
+    h += '</div>';
+
+    // Photo gallery
+    if (hasPhotos) {
+      h += '<div class="photo-gallery">';
+      photos.forEach(function(p, i) {
+        h += '<img class="photo-thumb" src="' + p + '" data-photo-section="' + sec.id + '" data-photo-idx="' + i + '" style="border-color:' + sec.color.border + '" alt="">';
+      });
+      h += '<button class="photo-add-large" data-add-photo="' + sec.id + '" style="border-color:' + sec.color.border + ';color:' + sec.color.text + '">＋</button>';
+      h += '</div>';
+    }
+
+    // Checklist items
+    if (sec.items && sec.items.length > 0) {
+      h += '<div class="checklist-items">';
+      sec.items.forEach(function(item, i) {
+        h += renderItem(sec.id, i, item);
+      });
+      h += '</div>';
+    }
+
+    // Sub boxes
+    if (sec.subBoxes) {
+      sec.subBoxes.forEach(function(box) {
+        h += renderSubBox(sec.id, box, sec.color);
+      });
+    }
+
+    // Fixed note
+    if (sec.fixedNote) {
+      h += '<div class="fixed-note">' + esc(sec.fixedNote) + '</div>';
+    }
+
+    // Guest toggle
+    if (sec.guestToggle) {
+      var gm = getGuestMode();
+      h += '<div class="guest-toggle">';
+      h += '<div class="guest-toggle-btn' + (gm === 'yes' ? ' active-yes' : '') + '" data-guest="yes">☀️ ゲストあり</div>';
+      h += '<div class="guest-toggle-btn' + (gm === 'no' ? ' active-no' : '') + '" data-guest="no">🌙 ゲストなし</div>';
+      h += '</div>';
+
+      // Guest Yes box
+      h += '<div class="guest-box' + (gm !== 'yes' ? ' guest-box-hidden' : '') + '" id="guest-yes" style="background:' + sec.guestYes.color.bg + ';border-color:' + sec.guestYes.color.border + '">';
+      h += '<div class="guest-box-title" style="color:' + sec.guestYes.color.text + '">' + esc(sec.guestYes.title) + '</div>';
+      sec.guestYes.items.forEach(function(item, i) {
+        h += renderItem(sec.id + '-gy', i, item);
+      });
+      h += '</div>';
+
+      // Guest No box
+      h += '<div class="guest-box' + (gm !== 'no' ? ' guest-box-hidden' : '') + '" id="guest-no" style="background:' + sec.guestNo.color.bg + ';border-color:' + sec.guestNo.color.border + '">';
+      h += '<div class="guest-box-title" style="color:' + sec.guestNo.color.text + '">' + esc(sec.guestNo.title) + '</div>';
+      sec.guestNo.items.forEach(function(item, i) {
+        h += renderItem(sec.id + '-gn', i, item);
+      });
+      h += '</div>';
+    }
+
+    h += '</div>';
+    return h;
+  }
+
+  function renderItem(sectionId, idx, item) {
+    var cbId = 'cb-' + sectionId + '-' + idx;
+    var h = '<label class="checklist-item" for="' + cbId + '">';
+    h += '<input type="checkbox" class="item-checkbox" id="' + cbId + '" data-cb>';
+    h += '<span class="item-content"><span class="item-text">' + esc(item.text);
+    if (item.badge) {
+      var bcls = item.badgeType === 'critical' ? 'badge-critical' : 'badge-warning';
+      h += ' <span class="badge ' + bcls + '">' + esc(item.badge) + '</span>';
+    }
+    h += '</span></span></label>';
+    return h;
+  }
+
+  function renderSubBox(sectionId, box, parentColor) {
+    var bg = box.color ? box.color.bg : parentColor.bg;
+    var border = box.color ? box.color.border : parentColor.border;
+    var h = '<div class="sub-box" style="background:' + bg + ';border-color:' + border + '">';
+    h += '<div class="sub-box-title">';
+    if (box.icon) h += box.icon + ' ';
+    h += esc(box.title) + '</div>';
+
+    if (box.items) {
+      box.items.forEach(function(item, i) {
+        if (item.tag) {
+          var tagBg = parentColor.bg;
+          var tagColor = parentColor.text;
+          h += '<div class="sub-box-row">';
+          h += '<span class="sub-box-tag" style="background:' + tagBg + ';color:' + tagColor + '">' + esc(item.tag) + '</span>';
+          h += '<span class="sub-box-text">' + esc(item.text) + '</span>';
+          h += '</div>';
+        } else {
+          h += renderItem(sectionId + '-sb', i, item);
+        }
+      });
+    }
+    h += '</div>';
+    return h;
+  }
+
+  function renderCompletion() {
+    return '<div class="completion-box">' +
+      '<div class="completion-text">📷 退去後の状況（忘れ物も）・仕上がり写真をAssistBnBへアップロード</div>' +
+      '<a class="completion-btn" href="' + esc(CONFIG.assistBnbUrl) + '" target="_blank" rel="noopener">AssistBnBを開く</a>' +
+    '</div>';
+  }
+
+  function renderFooter() {
+    return '<div class="footer">' +
+      '<button class="footer-btn" id="btn-pdf">🖨 PDF出力</button>' +
+      '<button class="footer-btn footer-btn-reset" id="btn-reset">🔄 チェックリセット</button>' +
+    '</div>';
+  }
+
+  function esc(s) {
+    var d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  // ============================== State Management ==============================
+  function saveState() {
+    var cbs = document.querySelectorAll('[data-cb]');
+    var state = {};
+    cbs.forEach(function(cb) { state[cb.id] = cb.checked; });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  function restoreState() {
+    var state = getCheckedState();
+    Object.keys(state).forEach(function(id) {
+      var cb = document.getElementById(id);
+      if (cb) {
+        cb.checked = state[id];
+        if (state[id]) cb.closest('.checklist-item').classList.add('checked');
+      }
+    });
+  }
+
+  function updateProgress() {
+    var total = 0, checked = 0;
+    var gm = getGuestMode();
+
+    document.querySelectorAll('.section-card:not(.optional) [data-cb]').forEach(function(cb) {
+      var guestBox = cb.closest('.guest-box');
+      if (guestBox) {
+        if (guestBox.classList.contains('guest-box-hidden')) return;
+      }
+      total++;
+      if (cb.checked) checked++;
+    });
+
+    var pct = total > 0 ? Math.round((checked / total) * 100) : 0;
+    var countEl = document.getElementById('progress-count');
+    var pctEl = document.getElementById('progress-pct');
+    var fillEl = document.getElementById('progress-fill');
+    if (countEl) countEl.textContent = checked + '/' + total + ' 完了';
+    if (pctEl) pctEl.textContent = pct + '%';
+    if (fillEl) {
+      fillEl.style.width = pct + '%';
+      if (pct === 100) fillEl.classList.add('complete');
+      else fillEl.classList.remove('complete');
+    }
+  }
+
+  // ============================== Photo Add ==============================
+  function triggerAddPhoto(sectionId) {
+    addPhotoTarget = sectionId;
+    var input = document.getElementById('photo-file-input');
+    input.value = '';
+    input.click();
+  }
+
+  function handlePhotoFile(file) {
+    if (!file || !addPhotoTarget) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      resizeImage(e.target.result, 800, function(base64) {
+        var stored = getStoredPhotos();
+        if (!stored[addPhotoTarget]) stored[addPhotoTarget] = [];
+        stored[addPhotoTarget].push(base64);
+        saveStoredPhotos(stored);
+        renderApp();
+        showToast('写真を追加しました');
+      });
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function resizeImage(dataUrl, maxSize, callback) {
+    var img = new Image();
+    img.onload = function() {
+      var w = img.width, h = img.height;
+      if (w > maxSize || h > maxSize) {
+        if (w > h) { h = Math.round(h * maxSize / w); w = maxSize; }
+        else { w = Math.round(w * maxSize / h); h = maxSize; }
+      }
+      var canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      callback(canvas.toDataURL('image/jpeg', 0.8));
+    };
+    img.src = dataUrl;
+  }
+
+  // ============================== Photo Modal ==============================
+  function openModal(sectionId, idx) {
+    var photos = getAllPhotos(sectionId);
+    if (photos.length === 0) return;
+    modalState.sectionId = sectionId;
+    modalState.index = idx;
+    modalState.photos = photos;
+    modalState.scale = 1;
+
+    var m = document.createElement('div');
+    m.className = 'photo-modal';
+    m.id = 'photo-modal';
+    m.innerHTML =
+      '<div class="photo-modal-close" id="modal-close">×</div>' +
+      '<div class="photo-modal-counter" id="modal-counter">' + (idx + 1) + ' / ' + photos.length + '</div>' +
+      (photos.length > 1 ? '<div class="photo-modal-nav photo-modal-prev" id="modal-prev">‹</div><div class="photo-modal-nav photo-modal-next" id="modal-next">›</div>' : '') +
+      '<div class="photo-modal-img-wrap" id="modal-wrap"><img class="photo-modal-img" id="modal-img" src="' + photos[idx] + '" alt=""></div>';
+    document.body.appendChild(m);
+    document.body.style.overflow = 'hidden';
+    requestAnimationFrame(function() { m.classList.add('visible'); });
+    setupModalEvents();
+  }
+
+  function closeModal() {
+    var m = document.getElementById('photo-modal');
+    if (!m) return;
+    m.classList.remove('visible');
+    document.body.style.overflow = '';
+    setTimeout(function() { m.remove(); }, 200);
+  }
+
+  function showModalPhoto(idx) {
+    var photos = modalState.photos;
+    if (idx < 0) idx = photos.length - 1;
+    if (idx >= photos.length) idx = 0;
+    modalState.index = idx;
+    modalState.scale = 1;
+    var img = document.getElementById('modal-img');
+    var counter = document.getElementById('modal-counter');
+    if (img) { img.src = photos[idx]; img.style.transform = 'scale(1)'; }
+    if (counter) counter.textContent = (idx + 1) + ' / ' + photos.length;
+  }
+
+  function setupModalEvents() {
+    var wrap = document.getElementById('modal-wrap');
+    var img = document.getElementById('modal-img');
+    if (!wrap || !img) return;
+
+    var startX = 0, startY = 0, dist = 0, moved = false;
+
+    wrap.addEventListener('touchstart', function(e) {
+      if (e.touches.length === 2) {
+        modalState.startDist = getTouchDist(e.touches);
+        e.preventDefault();
+      } else if (e.touches.length === 1) {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        moved = false;
+      }
+    }, { passive: false });
+
+    wrap.addEventListener('touchmove', function(e) {
+      if (e.touches.length === 2) {
+        var d = getTouchDist(e.touches);
+        var ns = modalState.scale * (d / modalState.startDist);
+        ns = Math.min(Math.max(ns, 1), 5);
+        img.style.transform = 'scale(' + ns + ')';
+        e.preventDefault();
+      } else if (e.touches.length === 1 && modalState.scale <= 1.1) {
+        moved = true;
+      }
+    }, { passive: false });
+
+    wrap.addEventListener('touchend', function(e) {
+      if (e.touches.length === 0 && modalState.startDist > 0) {
+        var currentTransform = img.style.transform;
+        var match = currentTransform.match(/scale\(([^)]+)\)/);
+        modalState.scale = match ? parseFloat(match[1]) : 1;
+        if (modalState.scale < 1.1) { modalState.scale = 1; img.style.transform = 'scale(1)'; }
+        modalState.startDist = 0;
+        return;
+      }
+      if (moved && modalState.scale <= 1.1 && e.changedTouches.length > 0) {
+        var dx = e.changedTouches[0].clientX - startX;
+        var dy = e.changedTouches[0].clientY - startY;
+        if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+          if (dx > 0) showModalPhoto(modalState.index - 1);
+          else showModalPhoto(modalState.index + 1);
+          return;
+        }
+      }
+      if (!moved && modalState.scale <= 1.1) {
+        closeModal();
+      }
+    });
+
+    document.getElementById('modal-close').addEventListener('click', closeModal);
+    var prev = document.getElementById('modal-prev');
+    var next = document.getElementById('modal-next');
+    if (prev) prev.addEventListener('click', function(e) { e.stopPropagation(); showModalPhoto(modalState.index - 1); });
+    if (next) next.addEventListener('click', function(e) { e.stopPropagation(); showModalPhoto(modalState.index + 1); });
+
+    wrap.addEventListener('click', function(e) {
+      if (e.target === wrap) closeModal();
+    });
+  }
+
+  function getTouchDist(touches) {
+    var dx = touches[0].clientX - touches[1].clientX;
+    var dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  // ============================== Events ==============================
+  function attachEvents() {
+    var app = document.getElementById('app');
+
+    app.addEventListener('change', function(e) {
+      if (e.target.hasAttribute('data-cb')) {
+        var label = e.target.closest('.checklist-item');
+        if (label) {
+          if (e.target.checked) label.classList.add('checked');
+          else label.classList.remove('checked');
+        }
+        saveState();
+        updateProgress();
+      }
+    });
+
+    app.addEventListener('click', function(e) {
+      // Photo add buttons
+      var addBtn = e.target.closest('[data-add-photo]');
+      if (addBtn) {
+        triggerAddPhoto(addBtn.getAttribute('data-add-photo'));
+        return;
+      }
+      // Photo thumbnails
+      var thumb = e.target.closest('[data-photo-section]');
+      if (thumb) {
+        openModal(thumb.getAttribute('data-photo-section'), parseInt(thumb.getAttribute('data-photo-idx')));
+        return;
+      }
+      // Guest toggle
+      var guestBtn = e.target.closest('[data-guest]');
+      if (guestBtn) {
+        var mode = guestBtn.getAttribute('data-guest');
+        localStorage.setItem(GUEST_KEY, mode);
+        document.querySelectorAll('.guest-toggle-btn').forEach(function(b) {
+          b.classList.remove('active-yes', 'active-no');
+          if (b.getAttribute('data-guest') === mode) b.classList.add('active-' + mode);
+        });
+        var yesBox = document.getElementById('guest-yes');
+        var noBox = document.getElementById('guest-no');
+        if (yesBox) yesBox.classList.toggle('guest-box-hidden', mode !== 'yes');
+        if (noBox) noBox.classList.toggle('guest-box-hidden', mode !== 'no');
+        updateProgress();
+        return;
+      }
+      // PDF
+      if (e.target.closest('#btn-pdf')) {
+        window.print();
+        return;
+      }
+      // Reset
+      if (e.target.closest('#btn-reset')) {
+        if (confirm('チェックをすべてリセットしますか？')) {
+          localStorage.removeItem(STORAGE_KEY);
+          document.querySelectorAll('[data-cb]').forEach(function(cb) {
+            cb.checked = false;
+            var label = cb.closest('.checklist-item');
+            if (label) label.classList.remove('checked');
+          });
+          updateProgress();
+          showToast('リセットしました');
+        }
+        return;
+      }
+    });
+
+    // File input
+    document.getElementById('photo-file-input').addEventListener('change', function(e) {
+      if (e.target.files && e.target.files[0]) handlePhotoFile(e.target.files[0]);
+    });
+
+    // Keyboard nav in modal
+    document.addEventListener('keydown', function(e) {
+      if (!document.getElementById('photo-modal')) return;
+      if (e.key === 'Escape') closeModal();
+      if (e.key === 'ArrowLeft') showModalPhoto(modalState.index - 1);
+      if (e.key === 'ArrowRight') showModalPhoto(modalState.index + 1);
+    });
+  }
+
+  // ============================== Init ==============================
+  document.addEventListener('DOMContentLoaded', function() {
+    renderApp();
+    attachEvents();
+  });
+
+})();
+</script>
+</body>
+</html>
