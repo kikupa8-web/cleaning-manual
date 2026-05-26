@@ -3,6 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<meta name="theme-color" content="#F5F4EE">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="清掃マニュアル">
+<meta name="description" content="民泊清掃チェックリスト - @marugame">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta http-equiv="X-Frame-Options" content="DENY">
+<meta name="referrer" content="no-referrer">
+<link rel="manifest" href="data:application/json;charset=utf-8,%7B%22name%22%3A%22%E6%B8%85%E6%8E%83%E3%83%9E%E3%83%8B%E3%83%A5%E3%82%A2%E3%83%AB%22%2C%22short_name%22%3A%22%E6%B8%85%E6%8E%83%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23F5F4EE%22%2C%22theme_color%22%3A%22%23F5F4EE%22%2C%22icons%22%3A%5B%5D%7D">
 <title>清掃マニュアル</title>
 <!--
 ╔══════════════════════════════════════════════════════════════╗
@@ -1339,6 +1348,18 @@ body {
     renderApp();
     attachEvents();
   });
+
+  // ============================== Service Worker (オフライン対応) ==============================
+  if ('serviceWorker' in navigator) {
+    var swCode = "self.addEventListener('install',function(e){self.skipWaiting()});" +
+      "self.addEventListener('activate',function(e){e.waitUntil(self.clients.claim())});" +
+      "self.addEventListener('fetch',function(e){e.respondWith(" +
+      "caches.match(e.request).then(function(r){return r||fetch(e.request).then(function(res){" +
+      "if(res&&res.status===200){var c=res.clone();caches.open('cleaning-v1').then(function(cache){cache.put(e.request,c)})}" +
+      "return res})}))})";
+    var blob = new Blob([swCode], {type: 'application/javascript'});
+    navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(function(){});
+  }
 
 })();
 </script>
