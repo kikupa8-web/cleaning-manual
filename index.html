@@ -53,7 +53,7 @@ const CONFIG = {
   property: {
     name: "@marugame",
     address: "ファミール仁井田101号室",
-    duration: "90分",
+    duration: "120分",
     keybox: "0906"
   },
   assistBnbUrl: "https://assistbnb.lilfires.com/clean/cleaner/lineLogin/H5CTYAL?role=CLEANER&openExternalBrowser=1"
@@ -79,8 +79,8 @@ const CHECKLIST_DATA = [
         icon: "🧺",
         color: { bg: "#FFF8E7", border: "#BA7517" },
         items: [
-          { tag: "1F", text: "タオル（白）洗濯開始 → 枕カバー・布団カバー・スポンジ類" },
-          { tag: "2F", text: "グレーのタオル・マット洗濯開始 → 敷きシーツ" }
+          { tag: "1F", text: "1回目：タオル（白）洗濯\n2回目：枕カバー・布団カバー・スポンジ類" },
+          { tag: "2F", text: "1回目：グレーのタオル・マット洗濯\n2回目：敷きシーツ" }
         ]
       }
     ]
@@ -519,32 +519,35 @@ body {
   min-width: 0;
 }
 .item-text {
-  font-size: 15px;
+  font-size: 16px;
   color: #2C3E50;
   transition: opacity 0.2s;
-  font-weight: 500;
+  font-weight: 600;
+  line-height: 1.6;
 }
 
 /* ============================== Badges ============================== */
 .badge {
   display: inline-block;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 800;
-  padding: 3px 10px;
+  padding: 5px 14px;
   border-radius: 20px;
-  margin-left: 6px;
+  margin-left: 8px;
   white-space: nowrap;
   vertical-align: middle;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.5px;
 }
 .badge-critical {
   background: linear-gradient(135deg, #FFE0E6, #FFD0D9);
   color: #D63031;
-  box-shadow: 0 1px 4px rgba(214, 48, 49, 0.15);
+  box-shadow: 0 2px 6px rgba(214, 48, 49, 0.2);
+  border: 1.5px solid #FF8A9B;
 }
 .badge-warning {
   background: linear-gradient(135deg, #FFF3DA, #FFE8C0);
   color: #B7791F;
+  border: 1.5px solid #FFD280;
   box-shadow: 0 1px 4px rgba(183, 121, 31, 0.1);
 }
 
@@ -591,14 +594,15 @@ body {
 /* ============================== Fixed Note ============================== */
 .fixed-note {
   margin: 4px 16px;
-  padding: 12px 14px;
+  padding: 16px 14px;
   background: linear-gradient(135deg, #FFF8E1, #FFECB3);
-  border: 2px solid #FFD54F;
+  border: 2.5px solid #FFB300;
   border-radius: 14px;
-  font-size: 13px;
+  font-size: 18px;
   font-weight: 800;
   color: #E65100;
   text-align: center;
+  letter-spacing: 1px;
   box-shadow: 0 2px 8px rgba(255, 213, 79, 0.2);
 }
 
@@ -704,6 +708,37 @@ body {
   box-shadow: 0 3px 12px rgba(255, 107, 157, 0.25);
 }
 .footer-btn-reset:active { transform: scale(0.97); }
+
+/* ============================== Owner Message ============================== */
+.owner-message {
+  text-align: center;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 18px 16px;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, #F0F0FF, #FFF0F5, #FFF8F0);
+  border-radius: 18px;
+  border: 2px solid #D5C8E8;
+  color: #5B3A8C;
+  line-height: 1.9;
+  box-shadow: 0 2px 10px rgba(91, 58, 140, 0.08);
+}
+
+/* ============================== Thanks Message ============================== */
+.thanks-message {
+  text-align: center;
+  font-size: 20px;
+  font-weight: 800;
+  padding: 28px 16px;
+  margin-top: 4px;
+  background: linear-gradient(135deg, #FFF0F5, #F0F0FF, #F0FFF4);
+  border-radius: 20px;
+  border: 2px solid #E8D5F5;
+  color: #C44FE2;
+  line-height: 1.8;
+  letter-spacing: 1px;
+  box-shadow: 0 3px 15px rgba(196, 79, 226, 0.1);
+}
 
 /* ============================== Photo Modal ============================== */
 .photo-modal {
@@ -811,7 +846,7 @@ body {
 
   /* 非表示にする要素 */
   .progress-wrapper, .footer, .photo-add-large, .photo-add-small,
-  .guest-toggle, .photo-modal, .toast, .completion-box { display: none !important; }
+  .guest-toggle, .photo-modal, .toast, .completion-box, .thanks-message { display: none !important; }
 
   /* タイトル */
   .page-title { font-size: 18pt; padding: 8px 0 6px; background: none; color: #222; text-shadow: none; box-shadow: none; border-radius: 0; margin-bottom: 4px; }
@@ -925,10 +960,12 @@ body {
   function renderApp() {
     var h = '';
     h += renderHeader();
+    h += '<div class="owner-message">🏠 掃除は、宿の評価そのものです。<br>お客様に「また泊まりたい」と思っていただけるよう<br>心を込めてお願いします。</div>';
     h += renderProgress();
     CHECKLIST_DATA.forEach(function(sec) { h += renderSection(sec); });
     h += renderCompletion();
     h += renderFooter();
+    h += '<div class="thanks-message">✨🌟 今日もお疲れ様でした！<br>ありがとうございました!! 🌟✨</div>';
     document.getElementById('app').innerHTML = h;
     restoreState();
     updateProgress();
@@ -936,7 +973,7 @@ body {
 
   function renderHeader() {
     var addr = CONFIG.property.address ? '（' + esc(CONFIG.property.address) + '）' : '';
-    return '<div class="page-title">' + esc(CONFIG.property.name) + ' 清掃マニュアル</div>' +
+    return '<div class="page-title">' + esc(CONFIG.property.name) + '<br>清掃マニュアル</div>' +
     '<div class="header">' +
       '<div class="header-row"><span class="header-label">■ 清掃対象物件：</span><span class="header-value">' + esc(CONFIG.property.name) + '<br>' + esc(CONFIG.property.address || '') + '</span></div>' +
       '<div class="header-row"><span class="header-label">■ 清掃時間の目安：</span><span class="header-value">' + esc(CONFIG.property.duration) + '</span></div>' +
@@ -1069,7 +1106,7 @@ body {
           var tagColor = parentColor.text;
           h += '<div class="sub-box-row">';
           h += '<span class="sub-box-tag" style="background:' + tagBg + ';color:' + tagColor + '">' + esc(item.tag) + '</span>';
-          h += '<span class="sub-box-text">' + esc(item.text) + '</span>';
+          h += '<span class="sub-box-text">' + esc(item.text).replace(/\n/g, '<br>') + '</span>';
           h += '</div>';
         } else {
           h += renderItem(sectionId + '-sb', i, item);
@@ -1082,8 +1119,7 @@ body {
 
   function renderCompletion() {
     return '<div class="completion-box">' +
-      '<div class="completion-text">📷 退去後の状況（忘れ物も）・仕上がり写真をAssistBnBへアップロード</div>' +
-      '<a class="completion-btn" href="' + esc(CONFIG.assistBnbUrl) + '" target="_blank" rel="noopener">AssistBnBを開く</a>' +
+      '<div class="completion-text">⚠️ お願い ⚠️<br>退去後の状況（忘れ物も）・仕上がり写真は<br>AssistBnB掃除管理アプリより<br><strong>必ずアップロードしてください</strong></div>' +
     '</div>';
   }
 
