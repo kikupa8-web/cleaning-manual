@@ -934,7 +934,7 @@ body {
   const PHOTOS_KEY = 'cleaning-photos-' + CONFIG.property.name;
   const GUEST_KEY = 'cleaning-guest-' + CONFIG.property.name;
   let addPhotoTarget = null;
-  let modalState = { sectionId: null, index: 0, photos: [], scale: 1, startDist: 0, startX: 0, isDragging: false };
+  let modalState = { sectionId: null, index: 0, photos: [], scale: 1, tx: 0, ty: 0, startDist: 0, startX: 0, isDragging: false };
 
   // ============================== Helpers ==============================
   function getStoredPhotos() {
@@ -1246,6 +1246,8 @@ body {
     modalState.index = idx;
     modalState.photos = photos;
     modalState.scale = 1;
+    modalState.tx = 0;
+    modalState.ty = 0;
 
     var m = document.createElement('div');
     m.className = 'photo-modal';
@@ -1275,9 +1277,11 @@ body {
     if (idx >= photos.length) idx = 0;
     modalState.index = idx;
     modalState.scale = 1;
+    modalState.tx = 0;
+    modalState.ty = 0;
     var img = document.getElementById('modal-img');
     var counter = document.getElementById('modal-counter');
-    if (img) { img.src = photos[idx]; img.style.transform = 'scale(1)'; }
+    if (img) { img.src = photos[idx]; img.style.transform = 'translate(0px,0px) scale(1)'; }
     if (counter) counter.textContent = (idx + 1) + ' / ' + photos.length;
   }
 
@@ -1287,12 +1291,28 @@ body {
     if (!wrap || !img) return;
 
     var startX = 0, startY = 0, moved = false, pinchHappened = false;
+    var panStartTx = 0, panStartTy = 0;
+
+    function applyTransform() {
+      img.style.transform = 'translate(' + modalState.tx + 'px,' + modalState.ty + 'px) scale(' + modalState.scale + ')';
+    }
+    // 拡大時に画像が動かせる範囲に制限（端まで見えて、外には出すぎない）
+    function clampPan() {
+      var maxX = img.clientWidth * (modalState.scale - 1) / 2;
+      var maxY = img.clientHeight * (modalState.scale - 1) / 2;
+      if (modalState.tx > maxX) modalState.tx = maxX;
+      if (modalState.tx < -maxX) modalState.tx = -maxX;
+      if (modalState.ty > maxY) modalState.ty = maxY;
+      if (modalState.ty < -maxY) modalState.ty = -maxY;
+    }
 
     wrap.addEventListener('touchstart', function(e) {
       // 新しい1本指ジェスチャーの開始時だけフラグをリセット
       if (e.touches.length === 1 && modalState.startDist === 0) {
         startX = e.touches[0].clientX;
         startY = e.touches[0].clientY;
+        panStartTx = modalState.tx;
+        panStartTy = modalState.ty;
         moved = false;
         pinchHappened = false;
       }
@@ -1306,12 +1326,21 @@ body {
 
     wrap.addEventListener('touchmove', function(e) {
       if (e.touches.length >= 2 && modalState.startDist > 0) {
+        // ピンチで拡大縮小
         var d = getTouchDist(e.touches);
         var ns = modalState.scale * (d / modalState.startDist);
         ns = Math.min(Math.max(ns, 1), 5);
-        img.style.transform = 'scale(' + ns + ')';
+        img.style.transform = 'translate(' + modalState.tx + 'px,' + modalState.ty + 'px) scale(' + ns + ')';
         e.preventDefault();
-      } else if (e.touches.length === 1 && modalState.scale <= 1.1) {
+      } else if (e.touches.length === 1 && modalState.scale > 1.1) {
+        // 拡大中は1本指ドラッグで画像を移動（パン）
+        modalState.tx = panStartTx + (e.touches[0].clientX - startX);
+        modalState.ty = panStartTy + (e.touches[0].clientY - startY);
+        clampPan();
+        applyTransform();
+        moved = true;
+        e.preventDefault();
+      } else if (e.touches.length === 1) {
         moved = true;
       }
     }, { passive: false });
@@ -1321,14 +1350,20 @@ body {
       if (modalState.startDist > 0 && e.touches.length === 0) {
         var match = img.style.transform.match(/scale\(([^)]+)\)/);
         modalState.scale = match ? parseFloat(match[1]) : 1;
-        if (modalState.scale < 1.1) { modalState.scale = 1; img.style.transform = 'scale(1)'; }
+        if (modalState.scale < 1.1) {
+          modalState.scale = 1; modalState.tx = 0; modalState.ty = 0;
+          img.style.transform = 'translate(0px,0px) scale(1)';
+        } else {
+          clampPan();
+          applyTransform();
+        }
         modalState.startDist = 0;
       }
       // まだ指が画面に残っている間は何もしない
       if (e.touches.length > 0) return;
       // この操作でピンチが一度でも起きていたら、絶対に閉じない・スワイプもしない
       if (pinchHappened) return;
-      // 拡大中は閉じない・スワイプもしない
+      // 拡大中はパンしていただけなので、閉じない・スワイプしない
       if (modalState.scale > 1.1) return;
       // 左右スワイプで写真切替
       if (moved && e.changedTouches.length > 0) {
