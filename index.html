@@ -1312,26 +1312,39 @@ body {
     }, { passive: false });
 
     wrap.addEventListener('touchend', function(e) {
-      if (e.touches.length === 0 && modalState.startDist > 0) {
-        var currentTransform = img.style.transform;
-        var match = currentTransform.match(/scale\(([^)]+)\)/);
-        modalState.scale = match ? parseFloat(match[1]) : 1;
-        if (modalState.scale < 1.1) { modalState.scale = 1; img.style.transform = 'scale(1)'; }
-        modalState.startDist = 0;
+      // ピンチ操作中・直後は閉じない（指を離すタイミングがずれても誤作動しないように）
+      if (modalState.startDist > 0) {
+        if (e.touches.length === 0) {
+          // 全ての指が離れたら拡大率を確定
+          var currentTransform = img.style.transform;
+          var match = currentTransform.match(/scale\(([^)]+)\)/);
+          modalState.scale = match ? parseFloat(match[1]) : 1;
+          if (modalState.scale < 1.1) { modalState.scale = 1; img.style.transform = 'scale(1)'; }
+          modalState.startDist = 0;
+        }
+        moved = false;
         return;
       }
-      if (moved && modalState.scale <= 1.1 && e.changedTouches.length > 0) {
+      // まだ指が画面に残っている間は何もしない
+      if (e.touches.length > 0) return;
+      // 拡大中は閉じない・スワイプもしない
+      if (modalState.scale > 1.1) { moved = false; return; }
+      // 左右スワイプで写真切替
+      if (moved && e.changedTouches.length > 0) {
         var dx = e.changedTouches[0].clientX - startX;
         var dy = e.changedTouches[0].clientY - startY;
         if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
           if (dx > 0) showModalPhoto(modalState.index - 1);
           else showModalPhoto(modalState.index + 1);
+          moved = false;
           return;
         }
       }
-      if (!moved && modalState.scale <= 1.1) {
+      // タップで閉じる（拡大していない時のみ）
+      if (!moved) {
         closeModal();
       }
+      moved = false;
     });
 
     document.getElementById('modal-close').addEventListener('click', closeModal);
