@@ -1291,7 +1291,7 @@ body {
     if (!wrap || !img) return;
 
     var startX = 0, startY = 0, moved = false, pinchHappened = false;
-    var panStartTx = 0, panStartTy = 0;
+    var panStartTx = 0, panStartTy = 0, suppressClick = false;
 
     function applyTransform() {
       img.style.transform = 'translate(' + modalState.tx + 'px,' + modalState.ty + 'px) scale(' + modalState.scale + ')';
@@ -1315,6 +1315,7 @@ body {
         panStartTy = modalState.ty;
         moved = false;
         pinchHappened = false;
+        suppressClick = false;
       }
       // 2本指（以上）になったらピンチ開始
       if (e.touches.length >= 2) {
@@ -1361,10 +1362,18 @@ body {
       }
       // まだ指が画面に残っている間は何もしない
       if (e.touches.length > 0) return;
-      // この操作でピンチが一度でも起きていたら、絶対に閉じない・スワイプもしない
-      if (pinchHappened) return;
-      // 拡大中はパンしていただけなので、閉じない・スワイプしない
-      if (modalState.scale > 1.1) return;
+      // この操作でピンチが一度でも起きていたら、何もしない（拡大率はそのまま維持）
+      if (pinchHappened) { suppressClick = true; return; }
+      // 拡大中の場合
+      if (modalState.scale > 1.1) {
+        // パンせずにタップしたら元の大きさに戻す
+        if (!moved) {
+          modalState.scale = 1; modalState.tx = 0; modalState.ty = 0;
+          img.style.transform = 'translate(0px,0px) scale(1)';
+        }
+        suppressClick = true;
+        return;
+      }
       // 左右スワイプで写真切替
       if (moved && e.changedTouches.length > 0) {
         var dx = e.changedTouches[0].clientX - startX;
@@ -1372,11 +1381,12 @@ body {
         if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
           if (dx > 0) showModalPhoto(modalState.index - 1);
           else showModalPhoto(modalState.index + 1);
+          suppressClick = true;
           return;
         }
       }
       // タップで閉じる（動かしておらず・拡大もしていない時のみ）
-      if (!moved) closeModal();
+      if (!moved) { suppressClick = true; closeModal(); }
     });
 
     document.getElementById('modal-close').addEventListener('click', function(e) { e.stopPropagation(); closeModal(); });
@@ -1385,8 +1395,9 @@ body {
     if (prev) prev.addEventListener('click', function(e) { e.stopPropagation(); showModalPhoto(modalState.index - 1); });
     if (next) next.addEventListener('click', function(e) { e.stopPropagation(); showModalPhoto(modalState.index + 1); });
 
-    // 背景クリックで閉じる（拡大中は閉じない／PC用）
+    // 背景クリックで閉じる（タップ操作直後のクリックは無視／拡大中は閉じない／PC用）
     wrap.addEventListener('click', function(e) {
+      if (suppressClick) { suppressClick = false; return; }
       if (modalState.scale > 1.1) return;
       if (e.target === wrap) closeModal();
     });
